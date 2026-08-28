@@ -9,6 +9,7 @@
 ### Lessons Learned
 - Importance of starting with a minimal, working skeleton.
 
+
 ## Day 2 – Uptime and Load Average Collection
 
 - Added `get_uptime()` function using `uptime -p` command.
@@ -20,3 +21,15 @@
 - `/proc/loadavg` contains three load average values (1, 5, 15 minutes).
 - `uptime -p` gives a human-readable uptime format.
 - Breaking code into functions makes it more maintainable.
+
+
+## Day 3 – CPU Usage Calculation
+
+- Added `get_cpu_usage()` function.
+- Used `top -bn1` to get CPU idle percentage; computed usage as 100 - idle.
+- Tested script successfully.
+
+### Lessons Learned
+- `top -bn1` runs `top` once in batch mode (non-interactive).
+- The CPU line format may vary by distribution; always test.
+- Integer arithmetic in bash: `${idle%.*}` removes decimal part.
