@@ -27,6 +27,24 @@ get_cpu_usage() {
     echo "${usage}%"
 }
 
+# Function to get total memory in MB
+get_memory_total() {
+    free -m | awk '/^Mem:/ {print $2}'
+}
+
+# Function to get used memory in MB
+get_memory_used() {
+    free -m | awk '/^Mem:/ {print $3}'
+}
+
+# Function to get memory usage percentage
+get_memory_percent() {
+    local total=$(get_memory_total)
+    local used=$(get_memory_used)
+    local percent=$((100 * used / total))
+    echo "${percent}%"
+}
+
 # Function to display system infomation
 display_system_info() {
     echo "=== System Uptime & Load ==="
@@ -35,6 +53,11 @@ display_system_info() {
     echo ""
     echo "=== CPU Usage ==="
     echo "CPU Usage: $(get_cpu_usage)"
+    echo ""
+    echo "=== Memory Usage ==="
+    echo "Total Memory: $(get_memory_total) MB"
+    echo "Used Memory: $(get_memory_used) MB"
+    echo "Memory Usage: $(get_memory_percent)"
     echo ""
 }
 

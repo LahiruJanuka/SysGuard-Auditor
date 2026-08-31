@@ -33,3 +33,13 @@
 - `top -bn1` runs `top` once in batch mode (non-interactive).
 - The CPU line format may vary by distribution; always test.
 - Integer arithmetic in bash: `${idle%.*}` removes decimal part.
+
+
+## Day 4 – Memory Usage Metrics
+
+- Added functions to get total, used memory, and usage percentage.
+- Used `free -m` for memory info in MB.
+
+### Lessons Learned
+- `free -m` shows memory in MB; `-h` would be human-readable but harder to parse.
+- `/^Mem:/` in awk matches the line starting with "Mem:".
