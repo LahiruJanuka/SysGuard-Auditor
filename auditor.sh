@@ -45,15 +45,52 @@ get_memory_percent() {
     echo "${percent}%"
 }
 
-# Function to display system infomation
+# Function to get disk usage percentage for root partition
+get_disk_usage_percent() {
+    df -h / | awk 'NR==2 {print $5}'
+}
+
+# Function to get total disk space for root partition
+get_disk_total() {
+    df -h / | awk 'NR==2 {print $2}'
+}
+
+# Function to get free disk space for root partition
+get_disk_free() {
+    df -h / | awk 'NR==2 {print $4}'
+}
+
+# Function to get disk usage percentage as integer (for threshold comparison)
+get_disk_usage_int() {
+    df -h / | awk 'NR==2 {print $5}' | sed 's/%//'
+}
+
+# Function to display disk information
+display_disk_info() {
+    echo "=== Disk Usage (Root Partition) ==="
+    echo "Total Space: $(get_disk_total)"
+    echo "Used Space: $(get_disk_usage_percent)"
+    echo "Free Space: $(get_disk_free)"
+    echo ""
+}
+
+# Function to display system information
 display_system_info() {
     echo "=== System Uptime & Load ==="
     echo "Uptime: $(get_uptime)"
     echo "Load Average (1,5,15 min): $(get_load_average)"
     echo ""
+}
+
+# Function to display CPU information
+display_cpu_info() {
     echo "=== CPU Usage ==="
     echo "CPU Usage: $(get_cpu_usage)"
     echo ""
+}
+
+# Function to display memory information
+display_memory_info() {
     echo "=== Memory Usage ==="
     echo "Total Memory: $(get_memory_total) MB"
     echo "Used Memory: $(get_memory_used) MB"
@@ -62,11 +99,14 @@ display_system_info() {
 }
 
 main() {
-    echo "======================================================"
-    echo "       SysGuard Auditor - System Health Report"
-    echo "======================================================"
+    echo "============================================"
+    echo "  SysGuard Auditor - System Health Report"
+    echo "============================================"
     echo ""
     display_system_info
+    display_cpu_info
+    display_memory_info
+    display_disk_info
 }
 
 # Run main function

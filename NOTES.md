@@ -39,7 +39,12 @@
 
 - Added functions to get total, used memory, and usage percentage.
 - Used `free -m` for memory info in MB.
+- Added functions for disk total, used, free, and usage percentage.
+- Used `df -h /` to get root partition info.
 
 ### Lessons Learned
 - `free -m` shows memory in MB; `-h` would be human-readable but harder to parse.
 - `/^Mem:/` in awk matches the line starting with "Mem:".
+- `df -h /` shows human-readable disk usage for root partition.
+- `NR==2` in awk selects the second line (first is header).
+- `sed 's/%//'` removes the percent sign for numeric comparison.
