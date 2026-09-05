@@ -65,6 +65,11 @@ get_disk_usage_int() {
     df -h / | awk 'NR==2 {print $5}' | sed 's/%//'
 }
 
+# Function to get listening ports
+get_open_ports() {
+    ss -tuln | awk 'NR>1 {print $1, $5}' | sort -u
+}
+
 # Function to display disk information
 display_disk_info() {
     echo "=== Disk Usage (Root Partition) ==="
@@ -98,6 +103,13 @@ display_memory_info() {
     echo ""
 }
 
+# Function to display network information
+display_network_info() {
+    echo "=== Open Network Ports ==="
+    echo "$(get_open_ports)"
+    echo ""
+}
+
 main() {
     echo "============================================"
     echo "  SysGuard Auditor - System Health Report"
@@ -107,6 +119,7 @@ main() {
     display_cpu_info
     display_memory_info
     display_disk_info
+    display_network_info
 }
 
 # Run main function
