@@ -70,19 +70,27 @@ get_open_ports() {
     ss -tuln | awk 'NR>1 {print $1, $5}' | sort -u
 }
 
-# Function to get failed login attempts
+# Function to get failed authentication attempts
 get_failed_logins() {
     local auth_log=""
-    if [ -f /var/log/auth.log ]; then
+
+    if [[ -f /var/log/auth.log ]]; then
         auth_log="/var/log/auth.log"
-    elif [ -f /var/log/secure ]; then
+    elif [[ -f /var/log/secure ]]; then
         auth_log="/var/log/secure"
     else
-        echo "Auth log not found"
+        echo "N/A"
         return
     fi
-    
-    grep "Failed password" "$auth_log" | wc -l
+
+    local ssh_failures
+    local desktop_failures
+
+    ssh_failures=$(grep -E "sshd.*Failed password" "$auth_log" 2>/dev/null | wc -l)
+
+    desktop_failures=$(grep -E "sddm-helper.*authentication failure" "$auth_log" 2>/dev/null | wc -l)
+
+    echo $((ssh_failures + desktop_failures))
 }
 
 # Function to display disk information
@@ -127,9 +135,31 @@ display_network_info() {
 
 # Function to display security information
 display_security_info() {
+    local auth_log=""
+
+    if [[ -f /var/log/auth.log ]]; then
+        auth_log="/var/log/auth.log"
+    elif [[ -f /var/log/secure ]]; then
+        auth_log="/var/log/secure"
+    else
+        echo "=== Security Information ==="
+        echo "Authentication Log : Not found"
+        return
+    fi
+
+    local ssh_failures
+    local desktop_failures
+
+    ssh_failures=$(grep -E "sshd.*Failed password" "$auth_log" 2>/dev/null | wc -l)
+
+    desktop_failures=$(grep -E "sddm-helper.*authentication failure" "$auth_log" 2>/dev/null | wc -l)
+
     echo "=== Security Information ==="
-    echo "Failed Login Attempts: $(get_failed_logins)"
-    echo ""
+    echo "Authentication Log  : $auth_log"
+    echo "SSH Failures        : $ssh_failures"
+    echo "Desktop Failures    : $desktop_failures"
+    echo "Total Login Failures: $((ssh_failures + desktop_failures))"
+    echo
 }
 
 main() {
