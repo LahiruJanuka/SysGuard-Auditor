@@ -70,6 +70,21 @@ get_open_ports() {
     ss -tuln | awk 'NR>1 {print $1, $5}' | sort -u
 }
 
+# Function to get failed login attempts
+get_failed_logins() {
+    local auth_log=""
+    if [ -f /var/log/auth.log ]; then
+        auth_log="/var/log/auth.log"
+    elif [ -f /var/log/secure ]; then
+        auth_log="/var/log/secure"
+    else
+        echo "Auth log not found"
+        return
+    fi
+    
+    grep "Failed password" "$auth_log" | wc -l
+}
+
 # Function to display disk information
 display_disk_info() {
     echo "=== Disk Usage (Root Partition) ==="
@@ -110,6 +125,13 @@ display_network_info() {
     echo ""
 }
 
+# Function to display security information
+display_security_info() {
+    echo "=== Security Information ==="
+    echo "Failed Login Attempts: $(get_failed_logins)"
+    echo ""
+}
+
 main() {
     echo "============================================"
     echo "  SysGuard Auditor - System Health Report"
@@ -120,6 +142,7 @@ main() {
     display_memory_info
     display_disk_info
     display_network_info
+    display_security_info
 }
 
 # Run main function

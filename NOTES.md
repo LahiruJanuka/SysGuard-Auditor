@@ -48,3 +48,18 @@
 - `df -h /` shows human-readable disk usage for root partition.
 - `NR==2` in awk selects the second line (first is header).
 - `sed 's/%//'` removes the percent sign for numeric comparison.
+
+
+## Day 5 – Open Ports Listing
+
+- Added `get_open_ports()` function using `ss -tuln`.
+- Sorted unique entries for cleaner output.
+- Added `get_failed_logins()` function.
+- Checked for auth log location (/var/log/auth.log or /var/log/secure).
+- Used `grep "Failed password"` and `wc -l` to count attempts.
+
+### Lessons Learned
+- `ss -tuln` shows TCP/UDP listening ports without name resolution.
+- `sort -u` removes duplicate lines.
+- Different distros store auth logs in different locations.
+- `wc -l` counts lines from grep output.
