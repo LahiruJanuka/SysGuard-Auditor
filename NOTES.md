@@ -1,6 +1,6 @@
 # Development Notes
 
-## Day 1 – Project Initialization
+## Day 1
 
 - Initialized Git repository.
 - Added `auditor.sh` skeleton with shebang and `main()` placeholder.
@@ -10,7 +10,7 @@
 - Importance of starting with a minimal, working skeleton.
 
 
-## Day 2 – Uptime and Load Average Collection
+## Day 2
 
 - Added `get_uptime()` function using `uptime -p` command.
 - Added `get_load_average()` function parsing `/proc/loadavg`.
@@ -23,7 +23,7 @@
 - Breaking code into functions makes it more maintainable.
 
 
-## Day 3 – CPU Usage Calculation
+## Day 3
 
 - Added `get_cpu_usage()` function.
 - Used `top -bn1` to get CPU idle percentage; computed usage as 100 - idle.
@@ -35,7 +35,7 @@
 - Integer arithmetic in bash: `${idle%.*}` removes decimal part.
 
 
-## Day 4 – Memory Usage Metrics
+## Day 4 
 
 - Added functions to get total, used memory, and usage percentage.
 - Used `free -m` for memory info in MB.
@@ -50,7 +50,7 @@
 - `sed 's/%//'` removes the percent sign for numeric comparison.
 
 
-## Day 5 – Open Ports Listing
+## Day 5 
 
 - Added `get_open_ports()` function using `ss -tuln`.
 - Sorted unique entries for cleaner output.
