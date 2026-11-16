@@ -19,10 +19,37 @@ have() { command -v "$1" >/dev/null 2>&1; }
 # Version
 VERSION="0.2.0"
 
-# Thresholds in percent: WARN at or above *_WARN, CRIT at or above *_CRIT
+# ======================================================
+# Configuration loading
+# ======================================================
+# Order of precedence (lowest to highest):
+#   1. Built-in defaults below
+#   2. Values set in the config file (sourced over the defaults)
+#
+# Environment-variable overrides (e.g. `CPU_WARN=50 ./auditor.sh`)
+# are NOT honored yet -- the config file wins if both are set.
+
+# Absolute directory of this script (resolves ./relative and symlinks best-effort)
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+
+# Where to look for the config file:
+#   1. $CONFIG_FILE if the caller exported it
+#   2. <script_dir>/config/auditor.conf otherwise
+CONFIG_FILE="${CONFIG_FILE:-$SCRIPT_DIR/config/auditor.conf}"
+
+# 1. Built-in defaults
 CPU_WARN=70;  CPU_CRIT=85
 MEM_WARN=75;  MEM_CRIT=90
 DISK_WARN=80; DISK_CRIT=90
+
+# 2. Config file overrides defaults (if it exists and is readable)
+if [[ -r "$CONFIG_FILE" ]]; then
+    # shellcheck source=/dev/null
+    if ! source "$CONFIG_FILE"; then
+        echo "Warning: failed to source config: $CONFIG_FILE" >&2
+        echo "         Continuing with built-in defaults." >&2
+    fi
+fi
 
 # Print usage information
 usage() {

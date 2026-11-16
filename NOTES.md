@@ -99,3 +99,14 @@
 - Use a `for` loop over `"$@"` for simple flag parsing to avoid unreachable `shift` code.
 - `# shellcheck source=/dev/null` silences SC1091 for system files ShellCheck cannot follow.
 - Check `EUID` early and tell the user exactly which checks may be incomplete.
+
+## Day 9
+
+- Added `config/auditor.conf` with the default CPU, memory, and disk thresholds.
+- Added optional config loading with built-in defaults when the file is absent.
+- Added `CONFIG_FILE` support for selecting an alternate configuration path.
+
+### Lessons Learned
+
+- Resolve the config path from the script directory so the command works from any current directory.
+- Source configuration only after assigning built-in defaults so file values override them.
