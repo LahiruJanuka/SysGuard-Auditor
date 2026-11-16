@@ -105,8 +105,13 @@
 - Added `config/auditor.conf` with the default CPU, memory, and disk thresholds.
 - Added optional config loading with built-in defaults when the file is absent.
 - Added `CONFIG_FILE` support for selecting an alternate configuration path.
+- Added fail-fast validation for all threshold values and WARN/CRIT ordering.
+- Invalid configuration reports all detected errors and exits with code 65 (`EX_DATAERR`).
+- Valid leading-zero values are parsed as decimal numbers rather than octal.
 
 ### Lessons Learned
 
 - Resolve the config path from the script directory so the command works from any current directory.
 - Source configuration only after assigning built-in defaults so file values override them.
+- Validate each value before performing arithmetic comparisons.
+- Collect independent configuration errors so one run gives the user a complete repair list.

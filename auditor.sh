@@ -51,6 +51,64 @@ if [[ -r "$CONFIG_FILE" ]]; then
     fi
 fi
 
+# Validate a single threshold. Returns 1 and prints an error on failure.
+# Rules: non-negative integer, <= 100, no leading sign, no decimal point.
+validate_threshold() {
+    local name=$1 value=$2
+
+    if [[ ! "$value" =~ ^[0-9]+$ ]]; then
+        echo "Config error: $name='$value' is not a non-negative integer" >&2
+        return 1
+    fi
+
+    # 10# forces base-10 in arithmetic; without it bash reads "010" as octal 8,
+    # and "08" as a fatal error ("value too great for base").
+    if (( 10#$value > 100 )); then
+        echo "Config error: $name=$value is out of range (must be 0-100)" >&2
+        return 1
+    fi
+
+    return 0
+}
+
+# Validate all thresholds and WARN<=CRIT pairs. Exits 65 if any check fails.
+# Collects all errors first so the user can fix them in one pass.
+validate_config() {
+    local failed=0
+
+    validate_threshold CPU_WARN  "$CPU_WARN"  || failed=1
+    validate_threshold CPU_CRIT  "$CPU_CRIT"  || failed=1
+    validate_threshold MEM_WARN  "$MEM_WARN"  || failed=1
+    validate_threshold MEM_CRIT  "$MEM_CRIT"  || failed=1
+    validate_threshold DISK_WARN "$DISK_WARN" || failed=1
+    validate_threshold DISK_CRIT "$DISK_CRIT" || failed=1
+
+    # Only compare pairs if every value was individually valid —
+    # otherwise the arithmetic below would error on non-numeric input.
+    if (( failed == 0 )); then
+        if (( 10#$CPU_WARN > 10#$CPU_CRIT )); then
+            echo "Config error: CPU_WARN=$CPU_WARN > CPU_CRIT=$CPU_CRIT (WARN must be <= CRIT)" >&2
+            failed=1
+        fi
+        if (( 10#$MEM_WARN > 10#$MEM_CRIT )); then
+            echo "Config error: MEM_WARN=$MEM_WARN > MEM_CRIT=$MEM_CRIT (WARN must be <= CRIT)" >&2
+            failed=1
+        fi
+        if (( 10#$DISK_WARN > 10#$DISK_CRIT )); then
+            echo "Config error: DISK_WARN=$DISK_WARN > DISK_CRIT=$DISK_CRIT (WARN must be <= CRIT)" >&2
+            failed=1
+        fi
+    fi
+
+    if (( failed )); then
+        echo "Invalid configuration; aborting. Fix the errors above and re-run." >&2
+        exit 65
+    fi
+}
+
+# Reject invalid values before any collector runs.
+validate_config
+
 # Print usage information
 usage() {
         cat <<EOF
