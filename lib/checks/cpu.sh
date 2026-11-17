@@ -4,10 +4,10 @@
 
 get_cpu_usage() {
     [[ -r /proc/stat ]] || { echo "N/A"; return; }
-    local i1 t1 i2 t2
-    read -r i1 t1 < <(awk '/^cpu /{t=0; for(i=2;i<=NF;i++) t+=$i; print $5+$6, t}' /proc/stat)
+    local i1=0 t1=0 i2=0 t2=0
+    read -r i1 t1 < <(awk '/^cpu /{t=0; for(i=2;i<=NF;i++) t+=$i; print $5+$6, t}' /proc/stat) || true
     sleep 1
-    read -r i2 t2 < <(awk '/^cpu /{t=0; for(i=2;i<=NF;i++) t+=$i; print $5+$6, t}' /proc/stat)
+    read -r i2 t2 < <(awk '/^cpu /{t=0; for(i=2;i<=NF;i++) t+=$i; print $5+$6, t}' /proc/stat) || true
     local dt=$((t2 - t1)) di=$((i2 - i1))
     if [[ $dt -gt 0 ]]; then
         echo "$((100 * (dt - di) / dt))%"

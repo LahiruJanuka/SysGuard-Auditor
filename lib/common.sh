@@ -66,7 +66,7 @@ __LOG_FILE_READY=""
 
 # Lazily create the log directory and file on first write.
 __log_open() {
-    [[ -n "$__LOG_FILE_READY" ]] && return
+    if [[ -n "$__LOG_FILE_READY" ]]; then return; fi
     if [[ -z "$LOG_FILE" ]]; then
         __LOG_FILE_READY="no"
         return
@@ -180,7 +180,8 @@ validate_config() {
 get_distro() {
     if [[ -r /etc/os-release ]]; then
         # shellcheck source=/dev/null
-        (. /etc/os-release; echo "${PRETTY_NAME:-$NAME}")
+        (. /etc/os-release 2>/dev/null; echo "${PRETTY_NAME:-${NAME:-Linux (unknown distro)}}") \
+            || echo "Linux (unknown distro)"
     else
         echo "Linux (unknown distro)"
     fi
@@ -188,7 +189,7 @@ get_distro() {
 
 get_hostname() {
     if [[ -r /proc/sys/kernel/hostname ]]; then
-        cat /proc/sys/kernel/hostname
+        cat /proc/sys/kernel/hostname 2>/dev/null || echo "unknown"
     else
         hostname 2>/dev/null || echo "unknown"
     fi

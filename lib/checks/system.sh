@@ -6,8 +6,8 @@ format_uptime() {
     local s=$1
     local d=$((s / 86400)) h=$(((s % 86400) / 3600)) m=$(((s % 3600) / 60))
     local out="up"
-    [[ $d -gt 0 ]] && out="$out $d days,"
-    [[ $h -gt 0 ]] && out="$out $h hours,"
+    if (( d > 0 )); then out="$out $d days,"; fi
+    if (( h > 0 )); then out="$out $h hours,"; fi
     echo "$out $m minutes"
 }
 

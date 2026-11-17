@@ -166,3 +166,15 @@
 - stdout is report data; stderr and the log file are for operational events.
 - Logging must never prevent the report from running, so unwritable paths fall back to stderr-only.
 - Lazy log initialization avoids filesystem work when shared helpers are used without logging.
+
+## Day 14
+
+- Enabled `set -euo pipefail` after the Linux platform guard.
+- Added an exit trap that logs abnormal non-zero exits without duplicating clean completion events.
+- Isolated individual check failures so one collector can fail without aborting the report.
+- Hardened zero-match processing and defensive system collectors for strict-mode execution.
+
+### Lessons Learned
+
+- Strict mode requires explicit handling for expected false statuses from tests and `grep`.
+- An exit trap should report only abnormal exits when normal completion already has its own event.

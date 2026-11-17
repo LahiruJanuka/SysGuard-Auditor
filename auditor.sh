@@ -12,6 +12,9 @@ if [[ "$(uname -s)" != "Linux" ]]; then
     exit 1
 fi
 
+# Strict mode keeps failures visible while individual checks remain isolated.
+set -euo pipefail
+
 # Locate this script's directory.
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 
@@ -22,9 +25,23 @@ if [[ ! -r "$SCRIPT_DIR/lib/common.sh" ]]; then
     exit 70
 fi
 # shellcheck source=lib/common.sh
-source "$SCRIPT_DIR/lib/common.sh"
+if ! source "$SCRIPT_DIR/lib/common.sh"; then
+    echo "Fatal: lib/common.sh failed to load (syntax error?)" >&2
+    exit 70
+fi
 
 VERSION="0.2.0"
+
+# Log abnormal exits that bypass the normal completion event.
+# shellcheck disable=SC2329
+__on_exit() {
+    local rc=$?
+    set +e
+    if (( rc != 0 )); then
+        log_error "Unclean exit: status $rc"
+    fi
+}
+trap __on_exit EXIT
 
 # Configuration loading.
 CONFIG_FILE="${CONFIG_FILE:-$SCRIPT_DIR/config/auditor.conf}"
@@ -82,7 +99,7 @@ display_summary() {
 }
 
 main() {
-    local __name
+    local __name rc
 
     log_info "Starting SysGuard Auditor $VERSION"
     if [[ -r "$CONFIG_FILE" ]]; then
@@ -100,7 +117,13 @@ main() {
     check_privileges
 
     for __name in "${CHECKS[@]}"; do
+        set +e
         "check_$__name"
+        rc=$?
+        set -e
+        if (( rc != 0 )); then
+            log_warn "check_$__name exited $rc; continuing"
+        fi
     done
     unset __name
 
