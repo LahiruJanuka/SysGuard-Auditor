@@ -1,3 +1,5 @@
 .github/
 IMPLEMENTATION_PLAN.md
 PROBLEMS_AND_LIMITATIONS.md
+# Created at runtime by Task 11 logging
+logs/

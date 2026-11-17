@@ -28,6 +28,7 @@ VERSION="0.2.0"
 
 # Configuration loading.
 CONFIG_FILE="${CONFIG_FILE:-$SCRIPT_DIR/config/auditor.conf}"
+LOG_FILE="${LOG_FILE:-$SCRIPT_DIR/logs/auditor.log}"
 
 CPU_WARN=70;  CPU_CRIT=85
 MEM_WARN=75;  MEM_CRIT=90
@@ -61,6 +62,7 @@ unset __name
 # Warn once if not root, since some checks need it.
 check_privileges() {
     if (( EUID != 0 )); then
+        log_warn "Running as non-root; some checks will be incomplete"
         echo "Note: Running as non-root. Some checks (failed logins,"
         echo "      port owners) may be incomplete. Run with sudo for full results."
         echo ""
@@ -82,6 +84,13 @@ display_summary() {
 main() {
     local __name
 
+    log_info "Starting SysGuard Auditor $VERSION"
+    if [[ -r "$CONFIG_FILE" ]]; then
+        log_info "Using config: $CONFIG_FILE"
+    else
+        log_info "Using built-in defaults (no config file)"
+    fi
+
     echo "============================================"
     echo "  SysGuard Auditor - System Health Report"
     echo "  Host: $(get_hostname)  |  $(get_distro)"
@@ -96,6 +105,7 @@ main() {
     unset __name
 
     display_summary
+    log_info "Run complete: status=$OVERALL"
 }
 
 usage() {

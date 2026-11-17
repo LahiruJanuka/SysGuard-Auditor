@@ -56,11 +56,61 @@ update_overall() {
     esac
 }
 
-# Logging (stderr only; stdout is reserved for the report).
-# Task 11 will add timestamps and file output.
-log_info()  { echo "[INFO]  $*" >&2; }
-log_warn()  { echo "[WARN]  $*" >&2; }
-log_error() { echo "[ERROR] $*" >&2; }
+# ------------------------------------------------------
+# Logging
+# ------------------------------------------------------
+# LOG_FILE is set by the caller. If empty or unwritable, logging falls back
+# to stderr-only.
+LOG_FILE="${LOG_FILE:-}"
+__LOG_FILE_READY=""
+
+# Lazily create the log directory and file on first write.
+__log_open() {
+    [[ -n "$__LOG_FILE_READY" ]] && return
+    if [[ -z "$LOG_FILE" ]]; then
+        __LOG_FILE_READY="no"
+        return
+    fi
+    local dir is_new="no"
+    dir=$(dirname -- "$LOG_FILE")
+    if [[ ! -d "$dir" ]]; then
+        mkdir -p -- "$dir" 2>/dev/null || { __LOG_FILE_READY="no"; return; }
+    fi
+    if [[ -e "$LOG_FILE" && ! -f "$LOG_FILE" ]]; then
+        __LOG_FILE_READY="no"
+        return
+    fi
+    [[ -e "$LOG_FILE" ]] || is_new="yes"
+    if ! touch -- "$LOG_FILE" 2>/dev/null; then
+        __LOG_FILE_READY="no"
+        return
+    fi
+    if [[ "$is_new" == "yes" ]] && ! chmod 600 -- "$LOG_FILE" 2>/dev/null; then
+        __LOG_FILE_READY="no"
+        return
+    fi
+    __LOG_FILE_READY="yes"
+}
+
+# Write a timestamped event to stderr and, best-effort, the log file.
+__log() {
+    local level=$1
+    shift
+    local ts line
+    ts=$(date '+%Y-%m-%d %H:%M:%S')
+    line="[$ts] [$level] $*"
+    echo "$line" >&2
+    __log_open
+    if [[ "$__LOG_FILE_READY" == "yes" ]]; then
+        if ! echo "$line" 2>/dev/null >> "$LOG_FILE"; then
+            __LOG_FILE_READY="no"
+        fi
+    fi
+}
+
+log_info()  { __log INFO  "$@"; }
+log_warn()  { __log WARN  "$@"; }
+log_error() { __log ERROR "$@"; }
 
 # Fatal error: log and exit. First arg may be an exit code.
 #   die "message"        -> exit 1
@@ -75,16 +125,16 @@ die() {
     exit "$code"
 }
 
-# Validate a single threshold. Returns 1 and prints to stderr on failure.
+# Validate a single threshold. Returns 1 and logs an error on failure.
 validate_threshold() {
     local name=$1 value=$2
 
     if ! is_valid_int "$value"; then
-        echo "Config error: $name='$value' is not a non-negative integer" >&2
+        log_error "Config error: $name='$value' is not a non-negative integer"
         return 1
     fi
     if (( 10#$value > 100 )); then
-        echo "Config error: $name=$value is out of range (must be 0-100)" >&2
+        log_error "Config error: $name=$value is out of range (must be 0-100)"
         return 1
     fi
     return 0
@@ -104,17 +154,17 @@ validate_config() {
 
     if is_valid_int "$CPU_WARN" && is_valid_int "$CPU_CRIT" \
        && (( 10#$CPU_WARN > 10#$CPU_CRIT )); then
-        echo "Config error: CPU_WARN=$CPU_WARN > CPU_CRIT=$CPU_CRIT (WARN must be <= CRIT)" >&2
+        log_error "Config error: CPU_WARN=$CPU_WARN > CPU_CRIT=$CPU_CRIT (WARN must be <= CRIT)"
         failed=1
     fi
     if is_valid_int "$MEM_WARN" && is_valid_int "$MEM_CRIT" \
        && (( 10#$MEM_WARN > 10#$MEM_CRIT )); then
-        echo "Config error: MEM_WARN=$MEM_WARN > MEM_CRIT=$MEM_CRIT (WARN must be <= CRIT)" >&2
+        log_error "Config error: MEM_WARN=$MEM_WARN > MEM_CRIT=$MEM_CRIT (WARN must be <= CRIT)"
         failed=1
     fi
     if is_valid_int "$DISK_WARN" && is_valid_int "$DISK_CRIT" \
        && (( 10#$DISK_WARN > 10#$DISK_CRIT )); then
-        echo "Config error: DISK_WARN=$DISK_WARN > DISK_CRIT=$DISK_CRIT (WARN must be <= CRIT)" >&2
+        log_error "Config error: DISK_WARN=$DISK_WARN > DISK_CRIT=$DISK_CRIT (WARN must be <= CRIT)"
         failed=1
     fi
 

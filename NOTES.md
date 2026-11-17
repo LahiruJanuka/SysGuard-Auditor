@@ -152,3 +152,17 @@
 - A module loader should fail fast with a specific missing-module error instead of producing a partial report.
 - Check functions that mutate shared state must run in the current shell, not through command substitution or a pipeline.
 - Shared defaults should be guarded so the entry point's configured values still take precedence.
+
+## Day 13
+
+- Added lazy timestamped event logging to stderr and best-effort append logging at `logs/auditor.log`.
+- Added start, config-source, non-root warning, configuration-error, module-error, and completion events.
+- Added `LOG_FILE` support and ignored runtime log files in `.gitignore`.
+- Hardened log fallback for directory and other non-regular `LOG_FILE` targets without emitting extra shell diagnostics.
+- New log files are explicitly created with mode `600`; existing files retain their permissions so unwritable files still use stderr-only fallback.
+
+### Lessons Learned
+
+- stdout is report data; stderr and the log file are for operational events.
+- Logging must never prevent the report from running, so unwritable paths fall back to stderr-only.
+- Lazy log initialization avoids filesystem work when shared helpers are used without logging.
