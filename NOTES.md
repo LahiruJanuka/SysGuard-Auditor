@@ -115,3 +115,40 @@
 - Source configuration only after assigning built-in defaults so file values override them.
 - Validate each value before performing arithmetic comparisons.
 - Collect independent configuration errors so one run gives the user a complete repair list.
+
+## Day 10
+
+- Fixed `get_status()` so configured values with leading zeroes are parsed as decimal numbers during runtime comparisons.
+- Changed threshold pair validation to check CPU, memory, and disk pairs independently.
+- Added `is_valid_int()` so a malformed pair is skipped safely while valid pairs still report ordering errors.
+
+### Lessons Learned
+
+- Every Bash arithmetic comparison reads `08` and `09` as fatal octal. If a value comes from config, user input, or a file, prefix it with `10#`; there is no "safe arithmetic" mode.
+- Validation should report every independently fixable configuration error in one run.
+- Reset configuration state between manual tests; otherwise a previous test can change the result of a later test.
+
+## Day 11
+
+- Moved shared command, status, logging, fatal-error, and configuration-validation helpers into [`lib/common.sh`](./lib/common.sh).
+- Added an early `lib/common.sh` availability check with exit code 70 (`EX_SOFTWARE`).
+- Guarded `OVERALL` initialization so re-sourcing the library preserves an existing status.
+
+### Lessons Learned
+
+- A sourced library must contain definitions and initializations only; top-level output, main calls, and unconditional exits create side effects in the caller.
+- The entry point must validate that a dependency exists before trying to use helpers defined by that dependency.
+- Shared state initialization should be idempotent when a library may be sourced more than once.
+
+## Day 12
+
+- Split the collectors into deterministic modules under [`lib/checks/`](./lib/checks/): system, CPU, memory, disk, network, and security.
+- Moved report-header system identity helpers into [`lib/common.sh`](./lib/common.sh).
+- Updated [`auditor.sh`](./auditor.sh) to load every check module before running the report and to execute checks in the current shell.
+- Added guarded threshold defaults to [`lib/common.sh`](./lib/common.sh) so individual check modules can be sourced and run without configuration errors.
+
+### Lessons Learned
+
+- A module loader should fail fast with a specific missing-module error instead of producing a partial report.
+- Check functions that mutate shared state must run in the current shell, not through command substitution or a pipeline.
+- Shared defaults should be guarded so the entry point's configured values still take precedence.
